@@ -11,46 +11,62 @@ namespace qt_benchmark
     {
         static void Main(string[] args)
         {
-            var test = new Test(
+            List<string> results = new List<string>();
+            for (int j = 0; j < 20; j++)
+            {
+                IQuadTreeService qt;
+                var vertex = 100;
+                if (j > 9)
+                {
+                    qt = new Basic();
+                }
+                else
+                {
+                    qt = new QuadTree.Services.v2.QuadTree(new Square(new Vector2(0, 0), vertex));
+                }
+                var test = new Test(
                 seed: 1337,
-                //qt: new Basic(),
-                qt: new QuadTree.Services.v2.QuadTree(new Square(new Vector2(0, 0), 30)),
-                map: new Map { sizeX = 30, sizeY = 30 },
-                agentAmount: 200,
+                qt: qt,
+                //qt: new QuadTree.Services.v2.QuadTree(new Square(new Vector2(0, 0), 100)),
+                map: new Map { sizeX = vertex, sizeY = vertex },
+                agentAmount: 500,
                 agentRadius: 0.5f,
                 agentSpeed: 1
                 );
 
-            test.Start();
+                test.Start();
 
-            var ticks = 100;
+                var ticks = vertex;
 
-            var total = 0L;
-            var average = 0L;
-            var highest = 0L;
-            var lowest = long.MaxValue;
+                var total = 0L;
+                var average = 0L;
+                var highest = 0L;
+                var lowest = long.MaxValue;
 
-            var watch = new Stopwatch();
+                var watch = new Stopwatch();
 
-            for (int i = 0; i < ticks; i++)
-            {
-                watch.Start();
-                test.Update();
-                watch.Stop();
+                for (int i = 0; i < ticks; i++)
+                {
+                    watch.Start();
+                    test.Update();
+                    watch.Stop();
 
-                var current = watch.ElapsedMilliseconds;
-                total += current;
-                average = total / (i + 1);
-                if (current > highest) highest = current;
-                if (current < lowest) lowest = current;
+                    var current = watch.ElapsedTicks;
+                    total += current;
+                    average = total / (i + 1);
+                    if (current > highest) highest = current;
+                    if (current < lowest) lowest = current;
 
-                Console.Clear();
-                test.Draw();
-                watch.Reset();
-                Thread.Sleep(10);
+                    Console.Clear();
+                    test.Draw();
+                    watch.Reset();
+                    Thread.Sleep(10);
+                }
+
+                results.Add($"{qt.GetType()} Average: {average}ms / Highest: {highest}ms / Lowest: {lowest}ms");
             }
+            results.ForEach(Console.WriteLine);
 
-            Console.WriteLine($"Average: {average}ms / Highest: {highest}ms / Lowest: {lowest}ms");
             Console.ReadLine();
         }
     }

@@ -20,7 +20,7 @@ namespace qt_benchmark.QuadTree.Services.v2
 
         public HashSet<T> Contents => _contents;
 
-        public const float MinVertexSize = 1f;
+        public const float MinVertexSize = 5f;
 
         public QuadTreeNode<T> this[char index]
         {

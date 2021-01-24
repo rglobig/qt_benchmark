@@ -58,17 +58,9 @@ namespace qt_benchmark.QuadTree.Services.v2
             var itemPosition = item.position;
 
             var node = GetNodeByPrefix(item.nodeId);
-
-            var path = item.nodeId;
-            //Debug.Log($"dasdas {(item as CharacterItem).CharacterId} at position {itemPosition} and path {item.NodePath} {node} {node.Contents.Contains(item)} {node.Bounds.Contains(itemPosition)}");
+            
             node.Remove(item);
-            //Debug.Log($"Update {(item as CharacterItem).CharacterId} at position {itemPosition} and path {item.NodePath} {node.Contents.Contains(item)}");
-
-            //
-            //if (node fits into child)
-            //else
-            //{
-
+            
             while (!GetNodeByPrefix(pathBuilder.ToString()).Bounds.Contains(itemPosition))
             {
                 pathBuilder.Remove(pathBuilder.Length - 1, 1);
@@ -76,12 +68,6 @@ namespace qt_benchmark.QuadTree.Services.v2
 
             var ancestor = GetNodeByPrefix(pathBuilder.ToString());
             ancestor.Insert(item, pathBuilder.ToString());
-
-            var x = GetNodeByPrefix(path);
-            //Debug.Log($"{pathBuilder.ToString()} End {path} x contains {x.Contents.Contains(item)} {x.Contents.Count} {GetNodeByPrefix(pathBuilder.ToString()).Bounds.Contains(itemPosition)}");
-
-            //var c = GetNodeByPrefix(item.NodePath);
-            //Debug.Log($"{item.NodePath} c cont {c.Contents.Contains(item)} {c.Bounds.Contains(itemPosition)}");
         }
 
         private IEnumerable<Agent> InnerQuery(string quadId, Func<Agent, bool> condition = null, int anscestorLevel = 0)
