@@ -47,6 +47,16 @@
     <Compile Include="Agent.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuadTree\Services\v1\Direction.cs" />
+    <Compile Include="QuadTree\Services\v1\GridPosition.cs" />
+    <Compile Include="QuadTree\Services\v1\Helper.cs" />
+    <Compile Include="QuadTree\Services\v1\Id.cs" />
+    <Compile Include="QuadTree\Services\v1\Quad.cs" />
+    <Compile Include="QuadTree\Services\v1\QuadTree.cs" />
+    <Compile Include="QuadTree\Services\v1\QuadTreeNode.cs" />
+    <Compile Include="QuadTree\Services\v1\QuadTreePool.cs" />
+    <Compile Include="QuadTree\Services\v1\Size.cs" />
+    <Compile Include="QuadTree\Services\v1\WorldPosition.cs" />
     <Compile Include="QuadTree\Services\v2\DirectionType.cs" />
     <Compile Include="QuadTree\Services\v2\INodeItem.cs" />
     <Compile Include="QuadTree\Services\v2\NodeItemMovedEventArgs.cs" />
