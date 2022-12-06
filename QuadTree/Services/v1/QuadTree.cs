@@ -14,7 +14,7 @@ namespace qt_benchmark.QuadTree.Services.v1
 
 		public QuadTree(WorldPosition position, Size size, int poolSize, int nodeCapacity, int maxDepth)
 		{
-			pool = new QuadTreePool(this, poolSize, nodeCapacity, maxDepth);
+			pool = new QuadTreePool(poolSize, nodeCapacity, maxDepth);
 			RootNode = pool.Get(position, size.Width * 0.5, 0, null);
 		}
 

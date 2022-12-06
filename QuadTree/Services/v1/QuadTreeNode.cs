@@ -20,12 +20,10 @@ namespace qt_benchmark.QuadTree.Services.v1
 		readonly HashSet<Agent> mergeBuffer;
 		readonly int capacity;
 		readonly int maxDepth;
-		readonly QuadTree quadTree;
 		readonly QuadTreePool pool;
 
-		public QuadTreeNode(QuadTree quadTree, QuadTreePool pool, int capacity, int maxDepth)
+		public QuadTreeNode(QuadTreePool pool, int capacity, int maxDepth)
 		{
-			this.quadTree = quadTree;
 			this.pool = pool;
 			this.capacity = capacity;
 			this.maxDepth = maxDepth;
