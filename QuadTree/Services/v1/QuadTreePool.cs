@@ -19,11 +19,11 @@ namespace qt_benchmark.QuadTree.Services.v1
 			this.maxDepth = maxDepth;
 		}
 
-		public QuadTreeNode Get(WorldPosition worldPosition, double halfDim, int treeHeight, QuadTreeNode parent)
+		public QuadTreeNode Get(WorldPosition worldPosition, double size, int treeHeight, QuadTreeNode parent)
 		{
 			var tree = nodes.Count > 0 ? nodes.Pop() : new QuadTreeNode(this, nodeCapacity, maxDepth);
 
-			tree.SetUp(worldPosition, halfDim, treeHeight, parent);
+			tree.SetUp(worldPosition, size, treeHeight, parent);
 			return tree;
 		}
 
