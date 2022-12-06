@@ -131,11 +131,6 @@ namespace qt_benchmark.QuadTree.Services.v1
 			{
 				Agents.UnionWith(mergeBuffer);
 
-				//foreach (var item in Agents)
-				//{
-				//	quadTree.AgentToNodeLookup[item] = this;
-				//}
-
 				pool.Return(TopRight);
 				pool.Return(TopLeft);
 				pool.Return(BottomRight);
