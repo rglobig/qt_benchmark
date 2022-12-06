@@ -7,15 +7,14 @@ namespace qt_benchmark.QuadTree.Services.v1
 		readonly QuadTree quadTree;
 		readonly int nodeCapacity;
 		readonly int maxDepth;
-		readonly Stack<QuadTreeNode> quadTrees;
+		readonly Stack<QuadTreeNode> nodes;
 
 		public QuadTreePool(QuadTree quadTree, int initialSize, int nodeCapacity, int maxDepth)
 		{
-			if (quadTrees == null)
-				quadTrees = new Stack<QuadTreeNode>(initialSize);
+			nodes = new Stack<QuadTreeNode>(initialSize);
 
 			for (int i = 0; i < initialSize; i++)
-				quadTrees.Push(new QuadTreeNode(quadTree, this, nodeCapacity, maxDepth));
+				nodes.Push(new QuadTreeNode(quadTree, this, nodeCapacity, maxDepth));
 
 			this.quadTree = quadTree;
 			this.nodeCapacity = nodeCapacity;
@@ -24,12 +23,12 @@ namespace qt_benchmark.QuadTree.Services.v1
 
 		public QuadTreeNode Get(WorldPosition worldPosition, double halfDim, int treeHeight, QuadTreeNode parent)
 		{
-			var tree = quadTrees.Count > 0 ? quadTrees.Pop() : new QuadTreeNode(this.quadTree, this, nodeCapacity, maxDepth);
+			var tree = nodes.Count > 0 ? nodes.Pop() : new QuadTreeNode(quadTree, this, nodeCapacity, maxDepth);
 
 			tree.SetUp(worldPosition, halfDim, treeHeight, parent);
 			return tree;
 		}
 
-		public void Return(QuadTreeNode tree) => quadTrees.Push(tree);
+		public void Return(QuadTreeNode tree) => nodes.Push(tree);
 	}
 }

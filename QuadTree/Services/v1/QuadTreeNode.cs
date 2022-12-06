@@ -10,14 +10,14 @@ namespace qt_benchmark.QuadTree.Services.v1
 		public QuadTreeNode TopLeft { get; private set; }
 		public QuadTreeNode BottomRight { get; private set; }
 		public QuadTreeNode BottomLeft { get; private set; }
-		public List<Agent> Agents { get; private set; }
+		public HashSet<Agent> Agents { get; private set; }
 
 		int CurrentHeight;
 
 		//is null when this node is the root
 		QuadTreeNode parent;
 
-		readonly List<Agent> mergeBuffer;
+		readonly HashSet<Agent> mergeBuffer;
 		readonly int capacity;
 		readonly int maxDepth;
 		readonly QuadTree quadTree;
@@ -29,8 +29,8 @@ namespace qt_benchmark.QuadTree.Services.v1
 			this.pool = pool;
 			this.capacity = capacity;
 			this.maxDepth = maxDepth;
-			Agents = new List<Agent>(capacity);
-			mergeBuffer = new List<Agent>();
+			Agents = new HashSet<Agent>(capacity);
+			mergeBuffer = new HashSet<Agent>();
 		}
 
 		public void SetUp(WorldPosition position, double halfRange, int height, QuadTreeNode parent)
@@ -50,7 +50,7 @@ namespace qt_benchmark.QuadTree.Services.v1
 			{
 				Agents.Add(agent);
 
-				quadTree.AgentToNodeLookup[agent] = this;
+				//quadTree.AgentToNodeLookup[agent] = this;
 
 				if (Agents.Count > capacity && CurrentHeight <= maxDepth)
 					SplitUp();
@@ -63,11 +63,11 @@ namespace qt_benchmark.QuadTree.Services.v1
 			BottomRight = pool.Get(WorldPosition.Lerp(Quad.Center, Quad.BottomRight, 0.5), Quad.HalfDimension * 0.5, CurrentHeight + 1, this);
 			BottomLeft = pool.Get(WorldPosition.Lerp(Quad.Center, Quad.BottomLeft, 0.5), Quad.HalfDimension * 0.5, CurrentHeight + 1, this);
 
-			for (int i = Agents.Count - 1; i >= 0; i--)
+			foreach(var agent in Agents)
 			{
-				AddObjectToSubTrees(Agents[i]);
-				Agents.Remove(Agents[i]);
-			}
+                AddObjectToSubTrees(agent);
+            }
+			Agents.Clear();
 		}
 
 		public void RemoveObject(Agent agent)
@@ -75,11 +75,11 @@ namespace qt_benchmark.QuadTree.Services.v1
 			Agents.Remove(agent);
 			parent?.MergeChilds();
 		}
-		public void RangeScanQuads(WorldPosition position, double range, List<Agent> buffer)
+		public void RangeScanQuads(WorldPosition position, double range, HashSet<Agent> buffer)
 		{
 			if (new Quad(position, range).Intersect(Quad))
 			{
-				buffer.AddRange(Agents);
+				buffer.UnionWith(Agents);
 				TopRight?.RangeScanQuads(position, range, buffer);
 				TopLeft?.RangeScanQuads(position, range, buffer);
 				BottomRight?.RangeScanQuads(position, range, buffer);
@@ -131,12 +131,12 @@ namespace qt_benchmark.QuadTree.Services.v1
 
 			if (mergeBuffer.Count <= capacity)
 			{
-				Agents.AddRange(mergeBuffer);
+				Agents.UnionWith(mergeBuffer);
 
-				foreach (var item in Agents)
-				{
-					quadTree.AgentToNodeLookup[item] = this;
-				}
+				//foreach (var item in Agents)
+				//{
+				//	quadTree.AgentToNodeLookup[item] = this;
+				//}
 
 				pool.Return(TopRight);
 				pool.Return(TopLeft);
@@ -152,27 +152,27 @@ namespace qt_benchmark.QuadTree.Services.v1
 			}
 		}
 
-		void GetAgentsInChildrenAll(List<Agent> buffer)
+		void GetAgentsInChildrenAll(HashSet<Agent> buffer)
 		{
 			if (TopRight.HasChildren())
 				TopRight.GetAgentsInChildrenAll(buffer);
 			else
-				buffer.AddRange(TopRight.Agents);
+				buffer.UnionWith(TopRight.Agents);
 
 			if (TopLeft.HasChildren())
 				TopLeft.GetAgentsInChildrenAll(buffer);
 			else
-				buffer.AddRange(TopLeft.Agents);
+				buffer.UnionWith(TopLeft.Agents);
 
 			if (BottomRight.HasChildren())
 				BottomRight.GetAgentsInChildrenAll(buffer);
 			else
-				buffer.AddRange(BottomRight.Agents);
+				buffer.UnionWith(BottomRight.Agents);
 
 			if (BottomLeft.HasChildren())
 				BottomLeft.GetAgentsInChildrenAll(buffer);
 			else
-				buffer.AddRange(BottomLeft.Agents);
+				buffer.UnionWith(BottomLeft.Agents);
 		}
 	}
 }
