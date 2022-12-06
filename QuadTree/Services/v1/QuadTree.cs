@@ -13,7 +13,6 @@ namespace qt_benchmark.QuadTree.Services.v1
 
         public QuadTreeNode RootNode { get; private set; }
         readonly QuadTreePool pool;
-        readonly HashSet<Agent> removeBuffer = new HashSet<Agent>();
 
         public QuadTree(WorldPosition position, Size size, int poolSize, int nodeCapacity, int maxDepth)
         {
@@ -25,23 +24,16 @@ namespace qt_benchmark.QuadTree.Services.v1
 
         public void Update()
         {
-            removeBuffer.Clear();
-
             foreach (var item in AgentToNodeLookup)
             {
                 var agent = item.Key;
-                var tree = item.Value;
+                var node = item.Value;
 
-                if (!tree.Quad.Contains(agent.position.ToWorld()))
+                if (!node.Quad.Contains(agent.position.ToWorld()))
                 {
-                    removeBuffer.Add(agent);
+                    AgentToNodeLookup[agent].RemoveObject(agent);
+                    RootNode.AddObject(agent);
                 }
-            }
-
-            foreach (var agent in removeBuffer)
-            {
-                AgentToNodeLookup[agent].RemoveObject(agent);
-                RootNode.AddObject(agent);
             }
         }
 
