@@ -2,44 +2,67 @@
 
 namespace qt_benchmark.QuadTree.Services.v1
 {
-	/// <summary>
-	/// this class partitioned the room depending on the nummer of units in a certain area
-	/// It splits up more and more depending on the number of units 
-	/// This makes it more performant to check distances between units
-	/// </summary>
-	public sealed class QuadTree : IQuadTreeService
-	{
-		public QuadTreeNode RootNode { get; private set; }
-		readonly QuadTreePool pool;
+    /// <summary>
+    /// this class partitioned the room depending on the nummer of units in a certain area
+    /// It splits up more and more depending on the number of units 
+    /// This makes it more performant to check distances between units
+    /// </summary>
+    public sealed class QuadTree : IQuadTreeService
+    {
+        public Dictionary<Agent, QuadTreeNode> AgentToNodeLookup { get; private set; } = new Dictionary<Agent, QuadTreeNode>();
 
-		public QuadTree(WorldPosition position, Size size, int poolSize, int nodeCapacity, int maxDepth)
-		{
-			pool = new QuadTreePool(poolSize, nodeCapacity, maxDepth);
-			RootNode = pool.Get(position, size.Width, 0, parent: null);
-		}
+        public QuadTreeNode RootNode { get; private set; }
+        readonly QuadTreePool pool;
+        readonly HashSet<Agent> removeBuffer = new HashSet<Agent>();
 
-		public void Add(Agent agent) => RootNode.AddObject(agent);
+        public QuadTree(WorldPosition position, Size size, int poolSize, int nodeCapacity, int maxDepth)
+        {
+            pool = new QuadTreePool(this, poolSize, nodeCapacity, maxDepth);
+            RootNode = pool.Get(position, size.Width, 0, parent: null);
+        }
 
-		public void Update() { }
+        public void Add(Agent agent) => RootNode.AddObject(agent);
 
-		public void RangeScan(WorldPosition position, double radius, HashSet<Agent> buffer)
-		{
-			buffer.Clear();
+        public void Update()
+        {
+            removeBuffer.Clear();
 
-			RootNode.RangeScanQuads(position, radius, buffer);
+            foreach (var item in AgentToNodeLookup)
+            {
+                var agent = item.Key;
+                var tree = item.Value;
 
-			var sqrRadius = radius * radius;
+                if (!tree.Quad.Contains(agent.position.ToWorld()))
+                {
+                    removeBuffer.Add(agent);
+                }
+            }
 
-			buffer.RemoveWhere(agent => WorldPosition.DistanceSquare(position, agent.position.ToWorld()) > sqrRadius);
-		}
+            foreach (var agent in removeBuffer)
+            {
+                AgentToNodeLookup[agent].RemoveObject(agent);
+                RootNode.AddObject(agent);
+            }
+        }
 
-		public void Initialize() { }
+        public void RangeScan(WorldPosition position, double radius, HashSet<Agent> buffer)
+        {
+            buffer.Clear();
 
-		public void Query(Agent agent, float radius, Dictionary<int, Agent> allAgents, HashSet<Agent> buffer)
-		{
-			RangeScan(agent.position.ToWorld(), radius, buffer);
-		}
+            RootNode.RangeScanQuads(position, radius, buffer);
 
-		public void Insert(Agent agent) => Add(agent);
-	}
+            var sqrRadius = radius * radius;
+
+            buffer.RemoveWhere(agent => WorldPosition.DistanceSquare(position, agent.position.ToWorld()) > sqrRadius);
+        }
+
+        public void Initialize() { }
+
+        public void Query(Agent agent, float radius, Dictionary<int, Agent> allAgents, HashSet<Agent> buffer)
+        {
+            RangeScan(agent.position.ToWorld(), radius, buffer);
+        }
+
+        public void Insert(Agent agent) => Add(agent);
+    }
 }

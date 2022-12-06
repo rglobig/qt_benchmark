@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using qt_benchmark.QuadTree.Services.v2;
+using System.Collections.Generic;
 
 namespace qt_benchmark.QuadTree.Services.v1
 {
@@ -20,11 +21,13 @@ namespace qt_benchmark.QuadTree.Services.v1
 		readonly HashSet<Agent> mergeBuffer;
 		readonly int capacity;
 		readonly int maxDepth;
-		readonly QuadTreePool pool;
+        readonly QuadTree quadTree;
+        readonly QuadTreePool pool;
 
-		public QuadTreeNode(QuadTreePool pool, int capacity, int maxDepth)
+		public QuadTreeNode(QuadTree quadTree, QuadTreePool pool, int capacity, int maxDepth)
 		{
-			this.pool = pool;
+            this.quadTree = quadTree;
+            this.pool = pool;
 			this.capacity = capacity;
 			this.maxDepth = maxDepth;
 			Agents = new HashSet<Agent>(capacity);
@@ -47,7 +50,9 @@ namespace qt_benchmark.QuadTree.Services.v1
 			{
 				Agents.Add(agent);
 
-				if (Agents.Count > capacity && CurrentHeight <= maxDepth)
+                quadTree.AgentToNodeLookup[agent] = this;
+
+                if (Agents.Count > capacity && CurrentHeight <= maxDepth)
 					SplitUp();
 			}
 		}
@@ -125,7 +130,12 @@ namespace qt_benchmark.QuadTree.Services.v1
 			{
 				Agents.UnionWith(mergeBuffer);
 
-				pool.Return(TopRight);
+                foreach (var item in Agents)
+                {
+                    quadTree.AgentToNodeLookup[item] = this;
+                }
+
+                pool.Return(TopRight);
 				pool.Return(TopLeft);
 				pool.Return(BottomRight);
 				pool.Return(BottomLeft);
