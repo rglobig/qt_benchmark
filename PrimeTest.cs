@@ -80,8 +80,8 @@ namespace qt_benchmark
 
                 foreach (var other in buffer)
                 {
-                    if (other == agent) continue;
                     totalChecks++;
+                    if (other == agent) continue;
                     var product = agent.prime * other.prime;
                     if (primeProduct.Contains(product)) continue;
                     var distance = Vector2.DistanceSquared(agent.position, other.position);

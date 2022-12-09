@@ -47,7 +47,7 @@ namespace qt_benchmark.QuadTree.Services.v2
             var quadPath = agent.nodeId;
             foreach (var nodeItem in InnerQuery(quadPath))
             {
-                buffer.Add(new Agent());
+                buffer.Add(nodeItem);
             }
         }
 
