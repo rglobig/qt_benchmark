@@ -45,7 +45,6 @@ namespace qt_benchmark
             {
                 if (print)
                 {
-
                     var line = "=========";
                     var testFor = $"TEST FOR: {test.GetType()}";
                     Console.WriteLine(testFor);
