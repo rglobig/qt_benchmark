@@ -12,9 +12,24 @@ namespace qt_benchmark.QuadTree.Services.v1
         public Dictionary<Agent, QuadTreeNode> AgentToNodeLookup { get; private set; } = new Dictionary<Agent, QuadTreeNode>();
 
         public QuadTreeNode RootNode { get; private set; }
-        readonly QuadTreePool pool;
+        QuadTreePool pool;
+        private readonly WorldPosition position;
+        private readonly Size size;
+        private readonly int poolSize;
+        private readonly int nodeCapacity;
+        private readonly int maxDepth;
 
         public QuadTree(WorldPosition position, Size size, int poolSize, int nodeCapacity, int maxDepth)
+        {
+            Reset();
+            this.position = position;
+            this.size = size;
+            this.poolSize = poolSize;
+            this.nodeCapacity = nodeCapacity;
+            this.maxDepth = maxDepth;
+        }
+
+        public void Reset()
         {
             pool = new QuadTreePool(this, poolSize, nodeCapacity, maxDepth);
             RootNode = pool.Get(position, size.Width, 0, parent: null);

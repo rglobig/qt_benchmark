@@ -6,9 +6,17 @@ namespace qt_benchmark.QuadTree.Services.v2
 {
     public class QuadTree: IQuadTreeService
     {
-        private readonly QuadTreeNode<Agent> _root;
+        private QuadTreeNode<Agent> _root;
+        private readonly Square bounds;
 
         public QuadTree(Square bounds)
+        {
+
+            this.bounds = bounds;
+            Reset();
+        }
+
+        public void Reset()
         {
             _root = new QuadTreeNode<Agent>(0, bounds);
         }

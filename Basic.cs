@@ -5,6 +5,7 @@ namespace qt_benchmark
 {
     class Basic : IQuadTreeService
     {
+        public void Reset() { }
         public void Initialize() { }
         public void Query(Agent queriedAgent, float radius, Dictionary<int, Agent> allAgents, HashSet<Agent> buffer)
         {

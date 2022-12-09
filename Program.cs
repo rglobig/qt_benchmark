@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using qt_benchmark.QuadTree.Services.v1;
 using qt_benchmark.QuadTree.Services.v2;
 
@@ -20,7 +19,7 @@ namespace qt_benchmark
             const int ticksPerCalc = 100;
             const int seed = 1337;
             const float agentRadius = 0.5f;
-            const int agentSpeed = 1;
+            const float agentSpeed = 1f;
 
             var services = new IQuadTreeService[]
             {
@@ -44,7 +43,9 @@ namespace qt_benchmark
 
             static void RunTest(bool print, ITest test, IQuadTreeService[] services, List<string> results, int calculations, int ticks)
             {
+                results.Add($"=========");
                 results.Add($"TEST FOR: {test.GetType()}");
+                results.Add($"=========");
                 var run = 0;
                 for (int i = 0; i < services.Length; i++)
                 {
@@ -53,7 +54,7 @@ namespace qt_benchmark
                     {
                         run++;
       
-                        test.Start(seed: seed,
+                        test.Reset(seed: seed,
                             qt: qt,
                             map: new Map { sizeX = size, sizeY = size },
                             agentAmount: agentAmount,
@@ -67,11 +68,19 @@ namespace qt_benchmark
                         if (print) Console.WriteLine($"Calc... [{run}/{calculations * services.Length}] => {qt.GetType()}");
                         var watch = new Stopwatch();
 
+                        var averageChecks = 0f;
+                        var checksInSum = 0f;
+
                         for (int x = 0; x < ticks; x++)
                         {
+                            var actualCheck = 0;
+                            var totalChecks = 0;
                             watch.Start();
-                            test.Update();
+                            test.Update(out actualCheck, out totalChecks);
                             watch.Stop();
+                            
+                            checksInSum += (actualCheck / (float)totalChecks);
+                            averageChecks = checksInSum / (x + 1);
 
                             var current = watch.ElapsedTicks;
                             total += current;
@@ -84,7 +93,7 @@ namespace qt_benchmark
                         var aOutput = ((double)average / TimeSpan.TicksPerMillisecond).ToString("0.000");
                         var hOutput = ((double)highest / TimeSpan.TicksPerMillisecond).ToString("0.000");
                         var lOutput = ((double)lowest / TimeSpan.TicksPerMillisecond).ToString("0.000");
-                        results.Add($"{qt.GetType()} Average: {aOutput}ms / Highest: {hOutput}ms / Lowest: {lOutput}ms");
+                        results.Add($"{qt.GetType()} Average: {aOutput}ms / Highest: {hOutput}ms / Lowest: {lOutput}ms / Checks: {averageChecks:P2}");
                     }
                 }
             }

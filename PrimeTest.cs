@@ -24,7 +24,7 @@ namespace qt_benchmark
             return Vector2.Normalize(new Vector2(x, y));
         }
 
-        public void Start(int seed, IQuadTreeService qt, Map map, int agentAmount, float agentRadius, float agentSpeed)
+        public void Reset(int seed, IQuadTreeService qt, Map map, int agentAmount, float agentRadius, float agentSpeed)
         {
             random = new Random(seed);
             agents = new Dictionary<int, Agent>(agentAmount);
@@ -32,6 +32,8 @@ namespace qt_benchmark
             primeProduct = new HashSet<int>(agentAmount);
             this.qt = qt;
             this.map = map;
+
+            qt.Reset();
 
             for (int i = 0; i < agentAmount; i++)
             {
@@ -51,7 +53,7 @@ namespace qt_benchmark
             qt.Initialize();
         }
 
-        public void Update()
+        public void Update(out int actualChecks, out int totalChecks)
         {
             foreach (var agent in agents)
             {
@@ -60,12 +62,16 @@ namespace qt_benchmark
 
             qt.Update();
 
-            CheckCollision();
+            CheckCollision(out actualChecks, out totalChecks);
         }
 
-        private void CheckCollision()
+        private void CheckCollision(out int actualChecks, out int totalChecks)
         {
             buffer.Clear();
+            primeProduct.Clear();
+
+            totalChecks = 0;
+            actualChecks = 0;
 
             foreach (var kvp in agents)
             {
@@ -75,10 +81,9 @@ namespace qt_benchmark
                 foreach (var other in buffer)
                 {
                     if (other == agent) continue;
-
+                    totalChecks++;
                     var product = agent.prime * other.prime;
                     if (primeProduct.Contains(product)) continue;
-
                     var distance = Vector2.DistanceSquared(agent.position, other.position);
                     var radius = (agent.radius + other.radius) * (agent.radius + other.radius);
                     if (distance <= radius)
@@ -88,10 +93,11 @@ namespace qt_benchmark
                         agent.move = direction;
 
                         var otherDirection = other.position - agent.position;
-                        otherDirection= Vector2.Normalize(otherDirection);
-                        other.move= otherDirection;
-                        primeProduct.Add(product);
+                        otherDirection = Vector2.Normalize(otherDirection);
+                        other.move = otherDirection;
                     }
+                    primeProduct.Add(product);
+                    actualChecks++;
                 }
 
                 CheckMapBounds(agent);
