@@ -43,9 +43,16 @@ namespace qt_benchmark
 
             static void RunTest(bool print, ITest test, IQuadTreeService[] services, List<string> results, int calculations, int ticks)
             {
-                results.Add($"=========");
-                results.Add($"TEST FOR: {test.GetType()}");
-                results.Add($"=========");
+                if (print)
+                {
+
+                    var line = "=========";
+                    var testFor = $"TEST FOR: {test.GetType()}";
+                    Console.WriteLine(testFor);
+                    results.Add(line);
+                    results.Add(testFor);
+                    results.Add(line);
+                }
                 var run = 0;
                 for (int i = 0; i < services.Length; i++)
                 {
@@ -53,7 +60,7 @@ namespace qt_benchmark
                     for (int j = 0; j < calculations; j++)
                     {
                         run++;
-      
+
                         test.Reset(seed: seed,
                             qt: qt,
                             map: new Map { sizeX = size, sizeY = size },
@@ -78,7 +85,7 @@ namespace qt_benchmark
                             watch.Start();
                             test.Update(out actualCheck, out totalChecks);
                             watch.Stop();
-                            
+
                             checksInSum += (actualCheck / (float)totalChecks);
                             averageChecks = checksInSum / (x + 1);
 
