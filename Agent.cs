@@ -6,6 +6,7 @@ namespace qt_benchmark
     public class Agent
     {
         public int id;
+        public int prime;
         public float radius;
         public Vector2 position;
         public Vector2 move;
