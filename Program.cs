@@ -77,16 +77,24 @@ namespace qt_benchmark
                         var averageChecks = 0f;
                         var checksInSum = 0f;
 
+                        var allActualChecks = 0;
+                        var allTotalChecks = 0;
+                        var totalBufferSize = 0;
+                        var averageBufferSize = 0f;
+
                         for (int x = 0; x < ticks; x++)
                         {
                             var actualCheck = 0;
                             var totalChecks = 0;
+                            var bufferSize = 0;
                             watch.Start();
-                            test.Update(out actualCheck, out totalChecks);
+                            test.Update(out actualCheck, out totalChecks, out bufferSize);
                             watch.Stop();
-
+                            allActualChecks += actualCheck;
+                            allTotalChecks += totalChecks;
                             checksInSum += (actualCheck / (float)totalChecks);
                             averageChecks = checksInSum / (x + 1);
+                            totalBufferSize += bufferSize;
 
                             var current = watch.ElapsedTicks;
                             total += current;
@@ -96,10 +104,11 @@ namespace qt_benchmark
 
                             watch.Reset();
                         }
+                        averageBufferSize = totalBufferSize / (float)ticks;
                         var aOutput = ((double)average / TimeSpan.TicksPerMillisecond).ToString("0.000");
                         var hOutput = ((double)highest / TimeSpan.TicksPerMillisecond).ToString("0.000");
                         var lOutput = ((double)lowest / TimeSpan.TicksPerMillisecond).ToString("0.000");
-                        results.Add($"{qt.GetType()} Average: {aOutput}ms / Highest: {hOutput}ms / Lowest: {lOutput}ms / Checks: {averageChecks:P2}");
+                        results.Add($"{qt.GetType()} Average: {aOutput}ms / Highest: {hOutput}ms / Lowest: {lOutput}ms / Checks: {averageChecks:P2} ({allActualChecks} / {allTotalChecks}) / Average Buffer Size: {averageBufferSize}");
                     }
                 }
             }

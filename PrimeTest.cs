@@ -53,7 +53,7 @@ namespace qt_benchmark
             qt.Initialize();
         }
 
-        public void Update(out int actualChecks, out int totalChecks)
+        public void Update(out int actualChecks, out int totalChecks, out int bufferSize)
         {
             foreach (var agent in agents)
             {
@@ -62,12 +62,11 @@ namespace qt_benchmark
 
             qt.Update();
 
-            CheckCollision(out actualChecks, out totalChecks);
+            CheckCollision(out actualChecks, out totalChecks, out bufferSize);
         }
 
-        private void CheckCollision(out int actualChecks, out int totalChecks)
+        private void CheckCollision(out int actualChecks, out int totalChecks, out int bufferSize)
         {
-            buffer.Clear();
             primeProduct.Clear();
 
             totalChecks = 0;
@@ -75,6 +74,7 @@ namespace qt_benchmark
 
             foreach (var kvp in agents)
             {
+                buffer.Clear();
                 var agent = kvp.Value;
                 qt.Query(agent, agent.radius, agents, buffer);
 
@@ -102,6 +102,8 @@ namespace qt_benchmark
 
                 CheckMapBounds(agent);
             }
+
+            bufferSize = primeProduct.Count;
         }
 
         private void CheckMapBounds(Agent agent)

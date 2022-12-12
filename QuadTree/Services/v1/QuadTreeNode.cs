@@ -1,5 +1,4 @@
-﻿using qt_benchmark.QuadTree.Services.v2;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace qt_benchmark.QuadTree.Services.v1
 {
