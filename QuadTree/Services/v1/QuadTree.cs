@@ -21,12 +21,12 @@ namespace qt_benchmark.QuadTree.Services.v1
 
         public QuadTree(WorldPosition position, Size size, int poolSize, int nodeCapacity, int maxDepth)
         {
-            Reset();
             this.position = position;
             this.size = size;
             this.poolSize = poolSize;
             this.nodeCapacity = nodeCapacity;
             this.maxDepth = maxDepth;
+            Reset();
         }
 
         public void Reset()
