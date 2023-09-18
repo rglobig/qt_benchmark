@@ -1,13 +1,18 @@
-﻿using System;
+﻿using qt_benchmark.QuadTree.Services.v1;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace qt_benchmark.QuadTree.Services.v2
 {
-    public class QuadTree: IQuadTreeService
+    public class QuadTree : IQuadTreeService
     {
         private QuadTreeNode<Agent> _root;
         private readonly Square bounds;
+        private QuadTreePool<Agent> _pool;
+
+        public Dictionary<Agent, QuadTreeNode<Agent>> AgentToNodeLookup { get; private set; } = new Dictionary<Agent, QuadTreeNode<Agent>>();
+
 
         public QuadTree(Square bounds)
         {
@@ -18,15 +23,24 @@ namespace qt_benchmark.QuadTree.Services.v2
 
         public void Reset()
         {
-            _root = new QuadTreeNode<Agent>(0, bounds);
+            _pool = new QuadTreePool<Agent>(this, 2000);
+            _root = _pool.Get(0, bounds, parent: null, string.Empty);
         }
 
-        public QuadTreeNode<Agent> GetNodeByPrefix(string query)
+        /// <summary>
+        /// Tries to get the exact node by its prefix, if allowAncestor is on and the node path is not found, the nearest ancertor will be returned instead
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="allowAncestor"></param>
+        /// <returns></returns>
+        public QuadTreeNode<Agent> GetNodeByPrefix(string query, bool allowAncestor = true)
         {
             var node = _root;
             for (int i = 0; i < query.Length; i++)
             {
-                char index = query[i];
+                var index = query[i];
+                if (node[index] == null)
+                    return allowAncestor ? node : null;
                 node = node[index];
             }
 
@@ -40,21 +54,37 @@ namespace qt_benchmark.QuadTree.Services.v2
 
         public void Update()
         {
+            foreach (var item in AgentToNodeLookup)
+            {
+                var agent = item.Key;
+                var node = item.Value;
+
+                if (!node.Bounds.Contains(agent.position))
+                {
+                    AgentToNodeLookup[agent].Remove(agent);
+                    Insert(agent);
+                }
+            }
         }
 
         public void Query(Agent agent, float radius, Dictionary<int, Agent> allAgents, HashSet<Agent> buffer)
         {
             var quadPath = agent.nodeId;
-            foreach (var nodeItem in InnerQuery(quadPath))
-            {
-                buffer.Add(nodeItem);
-            }
+            InnerQuerySet(quadPath, buffer);
+
+            var position = agent.position.ToWorld();
+            buffer.RemoveWhere(agent => WorldPosition.DistanceSquare(position, agent.position.ToWorld()) > radius * radius);
         }
 
         public void Insert(Agent item)
         {
+            //var node = 
             _root.Insert(item, "");
-            item.OnMove = Update;
+            //if (node != null)
+            //{
+            //    AgentToNodeLookup[item] = node;
+            //}
+            //item.OnMove = Update;
         }
 
         public void Update(Agent item)
@@ -65,15 +95,21 @@ namespace qt_benchmark.QuadTree.Services.v2
             var itemPosition = item.position;
 
             var node = GetNodeByPrefix(item.nodeId);
-            
+            if (node == null)
+            {
+                return;
+            }
+
             node.Remove(item);
-            
-            while (!GetNodeByPrefix(pathBuilder.ToString()).Bounds.Contains(itemPosition))
+
+            var currNode = GetNodeByPrefix(pathBuilder.ToString());
+            while (currNode != null && !currNode.Bounds.Contains(itemPosition))
             {
                 pathBuilder.Remove(pathBuilder.Length - 1, 1);
             }
 
             var ancestor = GetNodeByPrefix(pathBuilder.ToString());
+            if (ancestor != null) { return; }
             ancestor.Insert(item, pathBuilder.ToString());
         }
 
@@ -81,21 +117,21 @@ namespace qt_benchmark.QuadTree.Services.v2
         {
             var startAncestorPath = quadId.Substring(0, quadId.Length - anscestorLevel);
             var startNode = GetNodeByPrefix(startAncestorPath);
+            if (startNode == null)
+            {
+                yield break;
+            }
 
             var queue = new Queue<QuadTreeNode<Agent>>();
             queue.Enqueue(startNode);
 
+
             foreach (var surroundingNodeId in QuaternaryUtils.GetSurroundingNodes(startAncestorPath))
             {
-                try
+                var surroundingNode = GetNodeByPrefix(surroundingNodeId);
+                if (surroundingNode != null)
                 {
-                    var surroundingNode = GetNodeByPrefix(surroundingNodeId);
-                    //Debug.LogWarning(surroundingNodeId);
                     queue.Enqueue(surroundingNode);
-                }
-                catch (Exception e)
-                {
-                    continue;
                 }
             }
 
@@ -105,19 +141,52 @@ namespace qt_benchmark.QuadTree.Services.v2
 
                 foreach (var content in node.Contents)
                 {
-                    if (condition != null)
+                    if (condition != null && condition(content))
                     {
-                        if (condition(content))
-                        {
-                            yield return content;
-                        }
+                        yield return content;
                     }
                     else
                     {
-                        //Debug.Log((content as CharacterItem).CharacterId + " " + node);
                         yield return content;
                     }
                 }
+
+                if (node.IsLeaf)
+                    continue;
+                foreach (var subNode in node.Nodes)
+                {
+                    queue.Enqueue(subNode);
+                }
+            }
+        }
+
+        // fill an external hashset directly rather than iterate through the contents again
+        private void InnerQuerySet(string quadId, HashSet<Agent> buffer, int anscestorLevel = 0)
+        {
+            var startAncestorPath = quadId.Substring(0, quadId.Length - anscestorLevel);
+            var startNode = GetNodeByPrefix(startAncestorPath);
+            if (startNode == null)
+            {
+                return;
+            }
+
+            var queue = new Queue<QuadTreeNode<Agent>>();
+            queue.Enqueue(startNode);
+
+            foreach (var surroundingNodeId in QuaternaryUtils.GetSurroundingNodes(startAncestorPath))
+            {
+                var surroundingNode = GetNodeByPrefix(surroundingNodeId);
+                if (surroundingNode != null)
+                {
+                    queue.Enqueue(surroundingNode);
+                }
+            }
+
+            while (queue.Count > 0)
+            {
+                var node = queue.Dequeue();
+
+                buffer.UnionWith(node.Contents);
 
                 if (node.IsLeaf)
                     continue;
@@ -140,14 +209,11 @@ namespace qt_benchmark.QuadTree.Services.v2
 
             foreach (var outerPath in QuaternaryUtils.GetOuterNodePathsForPath(quadId, directionType))
             {
-                try
-                {
-                    queue.Enqueue(GetNodeByPrefix(outerPath));
-                }
-                catch
-                {
-                    continue;
-                }
+                    var currNode = GetNodeByPrefix(outerPath);
+                    if (currNode != null)
+                    {
+                        queue.Enqueue(currNode);
+                    }
             }
 
             while (queue.Count > 0)
