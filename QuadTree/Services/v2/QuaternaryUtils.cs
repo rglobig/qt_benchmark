@@ -42,9 +42,10 @@ namespace qt_benchmark.QuadTree.Services.v2
                     return '0';
                 case '3':
                     return '1';
+                default:
+                    throw new InvalidOperationException();
             }
 
-            throw new InvalidOperationException();
         }
 
         public static char FlipLeftRight(char quadId)
@@ -59,9 +60,9 @@ namespace qt_benchmark.QuadTree.Services.v2
                     return '3';
                 case '3':
                     return '2';
+                default:
+                    throw new InvalidOperationException();
             }
-
-            throw new InvalidOperationException();
         }
 
         public static string North(string quadPath)
@@ -218,6 +219,12 @@ namespace qt_benchmark.QuadTree.Services.v2
                 ? quadId.Substring(0, quadId.Length - ancestorLevel)
                 : quadId;
 
+            // the ancestor is root, and root doesn't have any neighbours
+            if (ancestorPath.Length == 0)
+            {
+                return new string[0];
+            }
+
             var n = North(ancestorPath);
             var s = South(ancestorPath);
             var w = West(ancestorPath);
@@ -228,7 +235,7 @@ namespace qt_benchmark.QuadTree.Services.v2
             var sw = SouthWest(ancestorPath);
             var se = SouthEast(ancestorPath);
 
-            return new string[] { n, s, w, e, nw, ne, sw, se };
+            return new string[] { n, s, w, e, nw, ne, sw, se }.Distinct().ToArray();
         }
 
         public static IEnumerable<string> GetOuterNodePathsForPath(string quadPath, DirectionType directionType)
@@ -295,7 +302,6 @@ namespace qt_benchmark.QuadTree.Services.v2
 
         private static string Direction(string quadPath, Func<char, char> reverseCharFunc, Func<char, bool> oppositeCharFunc)
         {
-            StringBuilder sb = new StringBuilder();
             char[] neighnour = new char[quadPath.Length];
 
             var cIndex = quadPath[quadPath.Length - 1];
@@ -308,7 +314,6 @@ namespace qt_benchmark.QuadTree.Services.v2
             bool changedLast = false;
             if (!isOpposite)
             {
-
                 // reduce until no longer needed
                 for (; i > 0; i--)
                 {
@@ -336,12 +341,7 @@ namespace qt_benchmark.QuadTree.Services.v2
                 neighnour[j] = quadPath[j];
             }
 
-            for (int k = 0; k < neighnour.Length; k++)
-            {
-                sb.Append(neighnour[k]);
-            }
-
-            return sb.ToString();
+            return String.Concat(neighnour);
         }
 
         public static string GetQuadTreePath(Vector2 position, TreeDefinitions treeDefinitions)

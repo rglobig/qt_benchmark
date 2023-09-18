@@ -25,7 +25,7 @@ namespace qt_benchmark
             {
                 new Basic(),
                 new QuadTree.Services.v1.QuadTree(new WorldPosition(size * 0.5, size * 0.5f), new Size(size, size), agentAmount, 16, 4),
-                new QuadTree.Services.v2.QuadTree(new Square(new Vector2(0, 0), size))
+                new QuadTree.Services.v2.QuadTree(new Square(new Vector2(0, 0), size)),
             };
 
             //dry run
